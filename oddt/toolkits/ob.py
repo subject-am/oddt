@@ -562,6 +562,58 @@ class Molecule(pybel.Molecule):
 pybel.Molecule = Molecule
 
 
+def diverse_conformers_generator(mol, n_conf=10, method='confab', seed=None):
+    """
+    Produce diverse conformers using current conformer as starting point.
+    Return a generator. Each conformer is a copy of original molecule object.
+
+    Parameters
+    ----------
+    mol : oddt.toolkit.Molecule object
+        Molecule for which generating conformers
+
+    n_conf : int (default=10)
+        Targer number of conformers
+
+    method : string (default='confab')
+        Method for generating conformers. Supported methods: confab, ga.
+
+    seed : None or int (default=None)
+        Random seed
+
+    Returns
+    -------
+    mols : generator of oddt.toolkit.Molecule objects
+        Molecules with diverse conformers
+    """
+    mol_clone = mol.clone
+    if seed is not None:
+        ob.Seed()
+    if method == 'ga':
+        cs = ob.OBConformerSearch()
+        # cs.SetScore(ob.OBEnergyConformerScore())
+        cs.Setup(mol_clone.OBMol,
+                 n_conf,  # numConformers
+                 50,  # numChildren
+                 5,  # mutability
+                 25)  # convergence
+        cs.GetConformers(mol_clone.OBMol)
+    elif method == 'confab':
+        ff = pybel._forcefields['uff']
+        ff.Setup(mol_clone.OBMol)
+        ff.DiverseConfGen(0.5, 10000, 5000.0, False)
+        ff.GetConformers(mol_clone.OBMol)
+    else:
+        raise NotImplemented('Method %s is not implemented' % method)
+
+    for i in range(mol_clone.OBMol.NumConformers()):
+        if i >= n_conf:
+            break
+        mol_output_clone = mol_clone.clone
+        mol_output_clone.OBMol.SetConformer(i)
+        yield mol_output_clone
+
+
 class AtomStack(object):
     def __init__(self, OBMol):
         self.OBMol = OBMol

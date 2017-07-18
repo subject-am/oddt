@@ -1062,6 +1062,54 @@ class Molecule(object):
         self._res_dict = state['dicts']['res_dict']
 
 
+def diverse_conformers_generator(mol, n_conf=10, method='etkdg', seed=None):
+    """
+    Produce diverse conformers using current conformer as starting point.
+    Return a generator. Each conformer is a copy of original molecule object.
+
+    Parameters
+    ----------
+    mol : oddt.toolkit.Molecule object
+        Molecule for which generating conformers
+
+    n_conf : int (default=10)
+        Targer number of conformers
+
+    method : string (default='etkdg')
+        Method for generating conformers. Supported methods: etkdg, etdg, dg.
+
+    seed : None or int (default=None)
+        Random seed
+
+    Returns
+    -------
+    mols : generator of oddt.toolkit.Molecule objects
+        Molecules with diverse conformers
+    """
+    mol_clone = mol.clone
+    if method == 'etkdg':
+        params = AllChem.ETKDG()
+    elif method == 'etdg':
+        params = AllChem.ETDG()
+    elif method == 'dg':
+        params = AllChem.EmbedParameters()
+    else:
+        raise NotImplemented('Method %s is not implemented' % method)
+    if seed is not None:
+        params.seed = seed
+    confs = AllChem.EmbedMultipleConfs(mol_clone.Mol, n_conf, params)
+    AllChem.AlignMolConformers(mol_clone.Mol)
+
+    mol_clone2 = mol.clone
+    mol_clone2.Mol.RemoveAllConformers()
+    for i in confs:
+        AllChem.UFFOptimizeMolecule(mol_clone.Mol, confId=i)
+    for conformer in mol_clone.Mol.GetConformers():
+        mol_output_clone = mol_clone2.clone
+        mol_output_clone.Mol.AddConformer(conformer)
+        yield mol_output_clone
+
+
 class AtomStack(object):
     def __init__(self, Mol):
         self.Mol = Mol
