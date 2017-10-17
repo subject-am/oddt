@@ -9,7 +9,7 @@ class CommonBenchMolecule(object):
 
     def time_atom_dict(self):
         for mol in self.mols:
-            _ = mol.atom_dict
+            mol.atom_dict
             mol._clear_cache()
 
     def time_atom_iter(self):
@@ -31,7 +31,7 @@ class BenchSmallMolecule(CommonBenchMolecule):
 
 class BenchProteinMolecule(CommonBenchMolecule):
     """Test molecule methods"""
-    repeat = 3
+    goal_time = 1.
 
     def setup(self):
         self.mols = list(oddt.toolkit.readfile('pdb', '%s/tests/data/dude/xiap/receptor_rdkit.pdb' % test_data_dir))

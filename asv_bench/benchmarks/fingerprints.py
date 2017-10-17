@@ -41,11 +41,11 @@ class BenchPLEC(object):
     def setup(self):
         self.mols = list(oddt.toolkit.readfile('sdf', '%s/tests/data/dude/xiap/actives_docked.sdf' % test_data_dir))[:10]
         for mol in self.mols:
-            _ = mol.atom_dict
+            mol.atom_dict
 
         self.rec = list(oddt.toolkit.readfile('pdb', '%s/tests/data/dude/xiap/receptor_rdkit.pdb' % test_data_dir))[0]
         self.rec.protein = True
-        _ = self.rec.atom_dict
+        self.rec.atom_dict
 
     def time_plec(self):
         for mol in self.mols:
